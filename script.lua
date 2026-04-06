@@ -1,51 +1,23 @@
 -- ============================================
--- ANIME FINAL QUEST - AUTO FARM 100%
--- COM BOTÃO FLUTUANTE PRA LIGAR/DESLIGAR
+-- SCRIPT DE TESTE - TENTA VÁRIOS BOTÕES
 -- ============================================
 
 local player = game.Players.LocalPlayer
 local ligado = true
-local espera = task.wait
 
--- ========== CRIAR BOTÃO NA TELA ==========
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AutoFarmGUI"
-screenGui.Parent = player.PlayerGui
+-- Lista de possíveis nomes para cada ação
+local possiveisAtaques = {"M1", "Click", "Atacar", "Attack", "Golpe", "Bater"}
+local possiveisLock = {"Lock", "Lock-On", "Mira", "Target"}
+local possiveisHabilidades = {"Skill", "Q", "E", "R", "F", "Ultimate", "Ult", "Despertar", "Awakening"}
 
-local botao = Instance.new("TextButton")
-botao.Size = UDim2.new(0, 150, 0, 50)
-botao.Position = UDim2.new(0.8, 0, 0.05, 0)
-botao.Text = "🔴 DESLIGAR"
-botao.TextSize = 18
-botao.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-botao.TextColor3 = Color3.fromRGB(255, 255, 255)
-botao.Parent = screenGui
-
--- Arredondar bordas
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10)
-corner.Parent = botao
-
--- Função do botão
-botao.MouseButton1Click:Connect(function()
-    ligado = not ligado
-    if ligado then
-        botao.Text = "🔴 DESLIGAR"
-        botao.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-        print("✅ Script LIGADO")
-    else
-        botao.Text = "🟢 LIGAR"
-        botao.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-        print("⛔ Script DESLIGADO")
-    end
-end)
-
--- ========== FUNÇÕES DO SCRIPT ==========
-local function clicarBotao(nomeBotao)
-    for _, btn in ipairs(player.PlayerGui:GetDescendants()) do
-        if btn:IsA("TextButton") and (btn.Text == nomeBotao or string.find(btn.Text, nomeBotao)) then
-            btn:Click()
-            return true
+local function clicarBotao(listaNomes)
+    for _, nome in ipairs(listaNomes) do
+        for _, btn in ipairs(player.PlayerGui:GetDescendants()) do
+            if btn:IsA("TextButton") and (btn.Text == nome or string.find(btn.Text, nome)) then
+                btn:Click()
+                print("✅ Clicou em: " .. nome)
+                return true
+            end
         end
     end
     return false
@@ -71,87 +43,47 @@ function getClosestEnemy()
     return inimigo, distancia
 end
 
-local angulo = 0
-function andarEmCirculos()
-    angulo = angulo + 0.5
-    local raio = 12
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local center = player.Character.HumanoidRootPart.Position
-        local x = center.X + math.cos(math.rad(angulo)) * raio
-        local z = center.Z + math.sin(math.rad(angulo)) * raio
-        player.Character.Humanoid:MoveTo(Vector3.new(x, center.Y, z))
-    end
-end
+-- CRIAR BOTÃO NA TELA
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player.PlayerGui
 
-function pegarItens()
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Model") and obj:FindFirstChild("Handle") and obj.Name == "Heart" then
-            local parte = obj:FindFirstChild("Handle")
-            if parte and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local dist = (parte.Position - player.Character.HumanoidRootPart.Position).magnitude
-                if dist < 15 then
-                    player.Character.HumanoidRootPart.CFrame = CFrame.new(parte.Position)
-                    espera(0.1)
-                end
-            end
-        end
-    end
-end
+local botao = Instance.new("TextButton")
+botao.Size = UDim2.new(0, 150, 0, 50)
+botao.Position = UDim2.new(0.8, 0, 0.05, 0)
+botao.Text = "🔴 DESLIGAR"
+botao.TextSize = 18
+botao.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+botao.Parent = screenGui
 
--- ========== LOOPS PRINCIPAIS ==========
+botao.MouseButton1Click:Connect(function()
+    ligado = not ligado
+    if ligado then
+        botao.Text = "🔴 DESLIGAR"
+        botao.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    else
+        botao.Text = "🟢 LIGAR"
+        botao.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    end
+end)
+
+-- LOOP PRINCIPAL
 task.spawn(function()
     while true do
         if ligado then
             local inimigo, dist = getClosestEnemy()
-            if inimigo and inimigo:FindFirstChild("HumanoidRootPart") and dist < 40 and player.Character then
-                local hrp = player.Character.HumanoidRootPart
-                local alvoHrp = inimigo.HumanoidRootPart
-                if hrp and alvoHrp then
-                    hrp.CFrame = CFrame.new(hrp.Position, alvoHrp.Position)
-                end
-                clicarBotao("Lock")
-                clicarBotao("M1")
-            else
-                andarEmCirculos()
+            if inimigo and dist < 40 and player.Character then
+                -- Tenta ativar Lock
+                clicarBotao(possiveisLock)
+                -- Tenta atacar
+                clicarBotao(possiveisAtaques)
+                -- Tenta usar habilidades
+                clicarBotao(possiveisHabilidades)
             end
         end
-        espera(0.15)
+        task.wait(0.2)
     end
 end)
 
-task.spawn(function()
-    local habilidades = {"Skill", "Ultimate", "Awakening", "Despertar"}
-    while true do
-        if ligado then
-            for _, hab in ipairs(habilidades) do
-                clicarBotao(hab)
-                espera(0.8)
-            end
-        end
-        espera(2)
-    end
-end)
-
-task.spawn(function()
-    while true do
-        if ligado then
-            pegarItens()
-        end
-        espera(1)
-    end
-end)
-
-task.spawn(function()
-    while true do
-        if ligado then
-            clicarBotao("Skip")
-            clicarBotao("Next")
-            clicarBotao("Replay")
-            clicarBotao("Again")
-        end
-        espera(3)
-    end
-end)
-
-print("✅ ANIME FINAL QUEST - AUTO FARM CARREGADO!")
-print("🟢 Botão vermelho no canto direito da tela para ligar/desligar")
+print("✅ SCRIPT DE TESTE CARREGADO!")
+print("🔴 Botão no canto direito para ligar/desligar")
+print("📝 Olhe no console do executor para ver quais botões foram clicados")
