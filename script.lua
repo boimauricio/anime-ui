@@ -1,34 +1,52 @@
--- Script Mobile - Anime Final Quest (Completo)
+-- Script Mobile - Anime Final Quest (100% Automático + Minimizável)
 local player = game.Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 
--- Criar Interface
+-- Variáveis
+local atacar = false
+local despertar = false
+local teleportar = false
+local curar = false
+local antiAfk = false
+local habilidades = false
+local coletar = false
+local minimizado = false
+
+-- Interface Principal
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local StatusLabel = Instance.new("TextLabel")
+local BotoesFrame = Instance.new("Frame") -- Frame para os botões (será minimizado)
+
+-- Botões
 local AtacarBtn = Instance.new("TextButton")
 local DespertarBtn = Instance.new("TextButton")
 local TeleportBtn = Instance.new("TextButton")
 local CurarBtn = Instance.new("TextButton")
 local AntiAfkBtn = Instance.new("TextButton")
+local HabilidadesBtn = Instance.new("TextButton")
+local ColetarBtn = Instance.new("TextButton")
+local MinimizarBtn = Instance.new("TextButton")
 local FecharBtn = Instance.new("TextButton")
 
 ScreenGui.Parent = game.CoreGui
 ScreenGui.Name = "MobileAutoFarm"
 
--- Fundo
+-- Frame principal (arrastável)
 Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0, 280, 0, 330)
-Frame.Position = UDim2.new(0.5, -140, 0.6, -165)
+Frame.Size = UDim2.new(0, 280, 0, 420)
+Frame.Position = UDim2.new(0.5, -140, 0.55, -210)
 Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 Frame.BackgroundTransparency = 0.2
 Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true  -- PERMITE MOVER O PAINEL
 
 -- Título
 Title.Parent = Frame
 Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "⚔️ AUTO FARM COMPLETO ⚔️"
+Title.Text = "⚔️ AUTO FARM 100% ⚔️"
 Title.TextColor3 = Color3.fromRGB(255, 215, 0)
 Title.BackgroundTransparency = 1
 Title.TextScaled = true
@@ -42,67 +60,124 @@ StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.TextSize = 13
 
--- Botões
-AtacarBtn.Parent = Frame
-AtacarBtn.Size = UDim2.new(0, 240, 0, 38)
-AtacarBtn.Position = UDim2.new(0.5, -120, 0, 85)
-AtacarBtn.Text = "⚔️ ATACAR OFF ⚔️"
-AtacarBtn.BackgroundColor3 = Color3.fromRGB(139, 0, 139)
-AtacarBtn.TextColor3 = Color3.new(1, 1, 1)
-AtacarBtn.TextSize = 14
+-- Frame dos botões (será minimizado)
+BotoesFrame.Parent = Frame
+BotoesFrame.Size = UDim2.new(1, 0, 1, -80)
+BotoesFrame.Position = UDim2.new(0, 0, 0, 80)
+BotoesFrame.BackgroundTransparency = 1
 
-DespertarBtn.Parent = Frame
-DespertarBtn.Size = UDim2.new(0, 240, 0, 38)
-DespertarBtn.Position = UDim2.new(0.5, -120, 0, 128)
-DespertarBtn.Text = "⚡ DESPERTAR OFF ⚡"
-DespertarBtn.BackgroundColor3 = Color3.fromRGB(139, 0, 0)
-DespertarBtn.TextColor3 = Color3.new(1, 1, 1)
-DespertarBtn.TextSize = 14
+-- Botões (dentro do BotoesFrame)
+local function criarBotao(texto, posY, cor, callback)
+    local btn = Instance.new("TextButton")
+    btn.Parent = BotoesFrame
+    btn.Size = UDim2.new(0, 240, 0, 38)
+    btn.Position = UDim2.new(0.5, -120, 0, posY)
+    btn.Text = texto
+    btn.BackgroundColor3 = cor
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.TextSize = 14
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
 
-TeleportBtn.Parent = Frame
-TeleportBtn.Size = UDim2.new(0, 240, 0, 38)
-TeleportBtn.Position = UDim2.new(0.5, -120, 0, 171)
-TeleportBtn.Text = "🌀 TELEPORTE OFF 🌀"
-TeleportBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 139)
-TeleportBtn.TextColor3 = Color3.new(1, 1, 1)
-TeleportBtn.TextSize = 14
+local atacarBtn = criarBotao("⚔️ ATACAR OFF ⚔️", 5, Color3.fromRGB(139, 0, 139), function()
+    atacar = not atacar
+    atacarBtn.Text = atacar and "⚔️ ATACAR ON ⚔️" or "⚔️ ATACAR OFF ⚔️"
+    atacarBtn.BackgroundColor3 = atacar and Color3.fromRGB(0, 100, 0) or Color3.fromRGB(139, 0, 139)
+    if atacar then task.spawn(atacarInimigos) end
+end)
 
-CurarBtn.Parent = Frame
-CurarBtn.Size = UDim2.new(0, 240, 0, 38)
-CurarBtn.Position = UDim2.new(0.5, -120, 0, 214)
-CurarBtn.Text = "💊 AUTO CURA OFF 💊"
-CurarBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-CurarBtn.TextColor3 = Color3.new(1, 1, 1)
-CurarBtn.TextSize = 14
+local despertarBtn = criarBotao("⚡ DESPERTAR OFF ⚡", 48, Color3.fromRGB(139, 0, 0), function()
+    despertar = not despertar
+    despertarBtn.Text = despertar and "⚡ DESPERTAR ON ⚡" or "⚡ DESPERTAR OFF ⚡"
+    despertarBtn.BackgroundColor3 = despertar and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(139, 0, 0)
+    if despertar then task.spawn(ativarDespertar) end
+end)
 
-AntiAfkBtn.Parent = Frame
-AntiAfkBtn.Size = UDim2.new(0, 240, 0, 30)
-AntiAfkBtn.Position = UDim2.new(0.5, -120, 0, 257)
-AntiAfkBtn.Text = "🛡️ ANTI-AFK OFF 🛡️"
-AntiAfkBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-AntiAfkBtn.TextColor3 = Color3.new(1, 1, 1)
-AntiAfkBtn.TextSize = 13
+local teleportBtn = criarBotao("🌀 TELEPORTE OFF 🌀", 91, Color3.fromRGB(0, 100, 139), function()
+    teleportar = not teleportar
+    teleportBtn.Text = teleportar and "🌀 TELEPORTE ON 🌀" or "🌀 TELEPORTE OFF 🌀"
+    teleportBtn.BackgroundColor3 = teleportar and Color3.fromRGB(0, 150, 200) or Color3.fromRGB(0, 100, 139)
+    if teleportar then task.spawn(teleportarInimigo) end
+end)
 
+local curarBtn = criarBotao("💊 AUTO CURA OFF 💊", 134, Color3.fromRGB(0, 100, 0), function()
+    curar = not curar
+    curarBtn.Text = curar and "💊 AUTO CURA ON 💊" or "💊 AUTO CURA OFF 💊"
+    curarBtn.BackgroundColor3 = curar and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(0, 100, 0)
+    if curar then task.spawn(autoCurar) end
+end)
+
+local antiAfkBtn = criarBotao("🛡️ ANTI-AFK OFF 🛡️", 177, Color3.fromRGB(30, 30, 30), function()
+    antiAfk = not antiAfk
+    antiAfkBtn.Text = antiAfk and "🛡️ ANTI-AFK ON 🛡️" or "🛡️ ANTI-AFK OFF 🛡️"
+    antiAfkBtn.BackgroundColor3 = antiAfk and Color3.fromRGB(0, 100, 0) or Color3.fromRGB(30, 30, 30)
+    if antiAfk then ativarAntiAfk() end
+end)
+
+local habilidadesBtn = criarBotao("✨ HABILIDADES OFF ✨", 220, Color3.fromRGB(255, 140, 0), function()
+    habilidades = not habilidades
+    habilidadesBtn.Text = habilidades and "✨ HABILIDADES ON ✨" or "✨ HABILIDADES OFF ✨"
+    habilidadesBtn.BackgroundColor3 = habilidades and Color3.fromRGB(200, 100, 0) or Color3.fromRGB(255, 140, 0)
+    if habilidades then task.spawn(usarHabilidades) end
+end)
+
+local coletarBtn = criarBotao("💰 AUTO COLETAR OFF 💰", 263, Color3.fromRGB(0, 100, 139), function()
+    coletar = not coletar
+    coletarBtn.Text = coletar and "💰 AUTO COLETAR ON 💰" or "💰 AUTO COLETAR OFF 💰"
+    coletarBtn.BackgroundColor3 = coletar and Color3.fromRGB(0, 150, 150) or Color3.fromRGB(0, 100, 139)
+    if coletar then task.spawn(autoColetar) end
+end)
+
+-- Botão Minimizar (X)
+MinimizarBtn.Parent = Frame
+MinimizarBtn.Size = UDim2.new(0, 50, 0, 25)
+MinimizarBtn.Position = UDim2.new(1, -110, 0, 5)
+MinimizarBtn.Text = "➖"
+MinimizarBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+MinimizarBtn.TextColor3 = Color3.new(1, 1, 1)
+MinimizarBtn.TextSize = 18
+
+-- Botão Fechar (❌)
 FecharBtn.Parent = Frame
-FecharBtn.Size = UDim2.new(0, 60, 0, 25)
-FecharBtn.Position = UDim2.new(1, -70, 0, 5)
+FecharBtn.Size = UDim2.new(0, 50, 0, 25)
+FecharBtn.Position = UDim2.new(1, -55, 0, 5)
 FecharBtn.Text = "❌"
 FecharBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
 FecharBtn.TextColor3 = Color3.new(1, 1, 1)
 FecharBtn.TextSize = 14
 
--- Variáveis
-local atacar = false
-local despertar = false
-local teleportar = false
-local curar = false
-local antiAfk = false
+-- Minimizar
+MinimizarBtn.MouseButton1Click:Connect(function()
+    minimizado = not minimizado
+    if minimizado then
+        BotoesFrame.Visible = false
+        StatusLabel.Visible = false
+        Frame.Size = UDim2.new(0, 280, 0, 50)
+        MinimizarBtn.Text = "➕"
+    else
+        BotoesFrame.Visible = true
+        StatusLabel.Visible = true
+        Frame.Size = UDim2.new(0, 280, 0, 420)
+        MinimizarBtn.Text = "➖"
+    end
+end)
 
--- ========== FUNÇÃO: ACHAR INIMIGO MAIS PRÓXIMO ==========
-local function getClosestEnemy()
-    local inimigo = nil
-    local distancia = 50
-    
+-- Fechar tudo
+FecharBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+    atacar = false
+    despertar = false
+    teleportar = false
+    curar = false
+    antiAfk = false
+    habilidades = false
+    coletar = false
+end)
+
+-- ========== FUNÇÕES (resistentes a respawn) ==========
+function getClosestEnemy()
+    local inimigo, distancia = nil, 50
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name ~= player.Name and obj:FindFirstChild("Humanoid") then
             local humano = obj:FindFirstChild("Humanoid")
@@ -121,54 +196,37 @@ local function getClosestEnemy()
     return inimigo, distancia
 end
 
--- ========== FUNÇÃO: TELEPORTE PARA INIMIGO ==========
-local function teleportarInimigo()
-    while teleportar do
-        local inimigo, dist = getClosestEnemy()
-        
-        if inimigo and inimigo:FindFirstChild("HumanoidRootPart") then
-            local posInimigo = inimigo.HumanoidRootPart.Position
-            local novaPos = Vector3.new(posInimigo.X, posInimigo.Y + 2, posInimigo.Z)
-            
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                player.Character.HumanoidRootPart.CFrame = CFrame.new(novaPos)
-                StatusLabel.Text = "📱 Status: 🌀 Teleportando..."
-            end
-        end
-        
-        task.wait(1) -- Teleporta a cada 1 segundo
-    end
-end
-
--- ========== FUNÇÃO: ATAQUE ==========
-local function atacarInimigos()
+function atacarInimigos()
     while atacar do
         local inimigo, dist = getClosestEnemy()
-        
-        if inimigo and inimigo:FindFirstChild("HumanoidRootPart") and dist < 30 then
-            -- Mira no inimigo
+        if inimigo and inimigo:FindFirstChild("HumanoidRootPart") and dist < 30 and player.Character then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position, inimigo.HumanoidRootPart.Position)
-            
-            -- Simula toque na tela (M1)
             local VirtualInput = game:GetService("VirtualInputManager")
             VirtualInput:SendMouseButtonEvent(500, 300, 0, true, game, 0)
             VirtualInput:SendMouseButtonEvent(500, 300, 0, false, game, 0)
-            
             StatusLabel.Text = "📱 Status: ⚔️ Atacando..."
         else
             StatusLabel.Text = "📱 Status: 🔍 Procurando..."
         end
-        
         task.wait(0.15)
     end
 end
 
--- ========== FUNÇÃO: DESPERTAR ==========
-local function ativarDespertar()
+function teleportarInimigo()
+    while teleportar do
+        local inimigo = getClosestEnemy()
+        if inimigo and inimigo:FindFirstChild("HumanoidRootPart") and player.Character then
+            local posInimigo = inimigo.HumanoidRootPart.Position
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(posInimigo.X, posInimigo.Y + 2, posInimigo.Z)
+            StatusLabel.Text = "📱 Status: 🌀 Teleportando..."
+        end
+        task.wait(1)
+    end
+end
+
+function ativarDespertar()
     while despertar do
         local achou = false
-        
-        -- Procura botão de despertar na tela
         for _, obj in ipairs(player.PlayerGui:GetDescendants()) do
             if obj:IsA("TextButton") or obj:IsA("ImageButton") then
                 local texto = (obj.Text or ""):lower()
@@ -180,46 +238,30 @@ local function ativarDespertar()
                 end
             end
         end
-        
-        -- Tenta tecla R
         if not achou then
             keypress("R")
             task.wait(0.1)
             keyrelease("R")
         end
-        
         task.wait(3)
     end
 end
 
--- ========== FUNÇÃO: AUTO CURA ==========
-local function autoCurar()
+function autoCurar()
     while curar do
         if player.Character and player.Character:FindFirstChild("Humanoid") then
             local vida = player.Character.Humanoid.Health
             local maxVida = player.Character.Humanoid.MaxHealth
-            
-            -- Se vida menor que 40%
             if vida < maxVida * 0.4 then
-                -- Procura botão de cura
-                local curou = false
                 for _, obj in ipairs(player.PlayerGui:GetDescendants()) do
                     if obj:IsA("TextButton") then
                         local texto = (obj.Text or ""):lower()
                         if texto:find("cura") or texto:find("heal") or texto:find("poção") or texto:find("potion") or texto:find("vida") then
                             obj:Click()
-                            curou = true
                             StatusLabel.Text = "📱 Status: 💊 Curando..."
                             break
                         end
                     end
-                end
-                
-                -- Tenta tecla Q (comum para cura)
-                if not curou then
-                    keypress("Q")
-                    task.wait(0.1)
-                    keyrelease("Q")
                 end
             end
         end
@@ -227,8 +269,41 @@ local function autoCurar()
     end
 end
 
--- ========== ANTI-AFK ==========
-local function ativarAntiAfk()
+function usarHabilidades()
+    local ataques = {"Explosão", "Rugido", "Gigantesco"}
+    while habilidades do
+        for _, obj in ipairs(player.PlayerGui:GetDescendants()) do
+            if obj:IsA("TextButton") then
+                for _, hab in ipairs(ataques) do
+                    if obj.Text:find(hab) then
+                        obj:Click()
+                        StatusLabel.Text = "📱 Status: ✨ " .. hab .. "!"
+                        task.wait(0.5)
+                        break
+                    end
+                end
+            end
+        end
+        task.wait(2)
+    end
+end
+
+function autoColetar()
+    while coletar do
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("Model") and (obj.Name:lower():find("moeda") or obj.Name:lower():find("coin") or obj.Name:lower():find("item") or obj.Name:lower():find("loot")) then
+                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    player.Character.HumanoidRootPart.CFrame = obj:FindFirstChild("HumanoidRootPart").CFrame
+                    StatusLabel.Text = "📱 Status: 💰 Coletando..."
+                    task.wait(0.3)
+                end
+            end
+        end
+        task.wait(0.5)
+    end
+end
+
+function ativarAntiAfk()
     local vu = game:GetService("VirtualUser")
     game:GetService("Players").LocalPlayer.Idled:Connect(function()
         if antiAfk then
@@ -238,77 +313,16 @@ local function ativarAntiAfk()
     end)
 end
 
--- ========== BOTÕES ==========
-AtacarBtn.MouseButton1Click:Connect(function()
-    atacar = not atacar
-    if atacar then
-        AtacarBtn.Text = "⚔️ ATACAR ON ⚔️"
-        AtacarBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-        task.spawn(atacarInimigos)
-    else
-        AtacarBtn.Text = "⚔️ ATACAR OFF ⚔️"
-        AtacarBtn.BackgroundColor3 = Color3.fromRGB(139, 0, 139)
-    end
-    StatusLabel.Text = "📱 Status: " .. (atacar and "⚔️ Atacando" or "Parado")
-end)
-
-DespertarBtn.MouseButton1Click:Connect(function()
-    despertar = not despertar
-    if despertar then
-        DespertarBtn.Text = "⚡ DESPERTAR ON ⚡"
-        DespertarBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-        task.spawn(ativarDespertar)
-    else
-        DespertarBtn.Text = "⚡ DESPERTAR OFF ⚡"
-        DespertarBtn.BackgroundColor3 = Color3.fromRGB(139, 0, 0)
+-- Loop principal (mantém o script vivo)
+task.spawn(function()
+    while true do
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+            task.wait(1)
+        end
+        task.wait()
     end
 end)
 
-TeleportBtn.MouseButton1Click:Connect(function()
-    teleportar = not teleportar
-    if teleportar then
-        TeleportBtn.Text = "🌀 TELEPORTE ON 🌀"
-        TeleportBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
-        task.spawn(teleportarInimigo)
-    else
-        TeleportBtn.Text = "🌀 TELEPORTE OFF 🌀"
-        TeleportBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 139)
-    end
-end)
-
-CurarBtn.MouseButton1Click:Connect(function()
-    curar = not curar
-    if curar then
-        CurarBtn.Text = "💊 AUTO CURA ON 💊"
-        CurarBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-        task.spawn(autoCurar)
-    else
-        CurarBtn.Text = "💊 AUTO CURA OFF 💊"
-        CurarBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-    end
-end)
-
-AntiAfkBtn.MouseButton1Click:Connect(function()
-    antiAfk = not antiAfk
-    if antiAfk then
-        AntiAfkBtn.Text = "🛡️ ANTI-AFK ON 🛡️"
-        AntiAfkBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-        ativarAntiAfk()
-    else
-        AntiAfkBtn.Text = "🛡️ ANTI-AFK OFF 🛡️"
-        AntiAfkBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    end
-end)
-
-FecharBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-    atacar = false
-    despertar = false
-    teleportar = false
-    curar = false
-    antiAfk = false
-    print("✅ Interface fechada")
-end)
-
-print("✅ Script Mobile COMPLETO carregado!")
-print("📱 Funções: Ataque | Despertar | Teleporte | Auto Cura | Anti-AFK")
+print("✅ Script 100% Automático carregado!")
+print("📱 Funções: Ataque | Despertar | Teleporte | Cura | Anti-AFK | Habilidades | Coletar")
+print("✨ Painel pode ser movido (arraste) | ➖ minimiza | ❌ fecha")
